@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Search Generator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: arial, sans-serif; background: #f1f3f4; color: #202124; }
+
+    /* ── Editor Panel ── */
+    #editor {
+      background: #fff;
+      border-bottom: 2px solid #dadce0;
+      padding: 20px 28px;
+    }
+    #editor h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #5f6368;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 16px;
+    }
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 24px;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .field input, .field textarea {
+      width: 100%;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 13.5px;
+      font-family: arial, sans-serif;
+      color: #202124;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      resize: vertical;
+    }
+    .field input:focus, .field textarea:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26,115,232,.15);
+    }
+    .field.full { grid-column: 1 / -1; }
+    .field textarea { min-height: 90px; }
+
+    .editor-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    #generateBtn {
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 9px 22px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    #generateBtn:hover { background: #1558b0; }
+    #resetBtn {
+      background: none;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      padding: 9px 18px;
+      font-size: 14px;
+      color: #5f6368;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    #resetBtn:hover { background: #f1f3f4; }
+    .hint { font-size: 11.5px; color: #9aa0a6; margin-left: 4px; }
+
+    /* ── Preview wrapper ── */
+    #preview {
+      background: #fff;
+      min-height: 600px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      padding: 14px 24px;
+      gap: 16px;
+      border-bottom: 1px solid #ebebeb;
+      background: #fff;
+    }
+    .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; text-decoration: none; flex-shrink: 0; }
+    .logo span:nth-child(1) { color: #4285F4; }
+    .logo span:nth-child(2) { color: #EA4335; }
+    .logo span:nth-child(3) { color: #FBBC05; }
+    .logo span:nth-child(4) { color: #4285F4; }
+    .logo span:nth-child(5) { color: #34A853; }
+    .logo span:nth-child(6) { color: #EA4335; }
+
+    .search-bar {
+      display: flex; align-items: center;
+      border: 1px solid #dfe1e5; border-radius: 24px;
+      padding: 8px 16px; gap: 10px; flex: 1; max-width: 680px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+    .search-bar input {
+      border: none; outline: none; font-size: 16px;
+      color: #202124; flex: 1; background: transparent;
+    }
+    .search-bar svg { color: #9aa0a6; flex-shrink: 0; }
+    .mic-icon { cursor: pointer; color: #4285F4 !important; }
+
+    .header-nav { display: flex; align-items: center; gap: 4px; margin-left: auto; flex-shrink: 0; }
+    .header-nav a { font-size: 13px; color: #202124; text-decoration: none; padding: 6px 8px; border-radius: 4px; }
+    .header-nav a:hover { background: #f1f3f4; }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: #4285F4;
+      color: #fff; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 4px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; align-items: center;
+      padding: 0 170px; border-bottom: 1px solid #ebebeb; gap: 4px; overflow-x: auto;
+    }
+    .tab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 12px 14px; font-size: 13px; color: #5f6368;
+      cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; text-decoration: none;
+    }
+    .tab:hover { color: #202124; }
+    .tab.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+
+    /* ── Main ── */
+    main { max-width: 660px; margin: 20px auto 60px; padding: 0 24px; }
+    .result-count { font-size: 13px; color: #70757a; margin-bottom: 18px; }
+
+    /* ── AI Overview ── */
+    .ai-overview {
+      border: 1px solid #e0e0e0; border-radius: 12px;
+      padding: 20px 22px; margin-bottom: 28px;
+      background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .ai-gem { width: 22px; height: 22px; flex-shrink: 0; }
+    .ai-label {
+      font-size: 15px; font-weight: 500;
+      background: linear-gradient(90deg, #4285F4, #9B59B6, #EA4335);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .ai-body { font-size: 14.5px; line-height: 1.65; color: #202124; }
+    .ai-body p + p { margin-top: 10px; }
+
+    .ai-sources { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .source-chip {
+      display: flex; align-items: center; gap: 6px;
+      border: 1px solid #e0e0e0; border-radius: 20px; padding: 5px 12px;
+      font-size: 12.5px; color: #1a73e8; text-decoration: none;
+      background: #f8f9fa; cursor: pointer; transition: background .12s;
+    }
+    .source-chip:hover { background: #e8f0fe; }
+    .source-favicon {
+      width: 14px; height: 14px; border-radius: 2px; background: #ddd;
+      display: flex; align-items: center; justify-content: center; font-size: 9px;
+    }
+
+    .ai-actions {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0f0f0;
+    }
+    .ai-action-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #5f6368; cursor: pointer;
+      padding: 5px 8px; border-radius: 6px; border: none; background: none; transition: background .12s;
+    }
+    .ai-action-btn:hover { background: #f1f3f4; color: #202124; }
+    .show-more {
+      font-size: 13.5px; color: #1a73e8; cursor: pointer;
+      margin-top: 12px; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .show-more:hover { text-decoration: underline; }
+    .feedback { font-size: 11.5px; color: #70757a; margin-top: 10px; }
+    .feedback a { color: #70757a; }
+  </style>
+</head>
+<body>
+
+<!-- ── Editor Panel ── -->
+<div id="editor">
+  <h2>🛠 Page Builder</h2>
+  <div class="editor-grid">
+
+    <div class="field">
+      <label>Search Query</label>
+      <input type="text" id="inp-query" value="what is the speed of light" placeholder="e.g. how tall is Mount Everest" />
+    </div>
+
+    <div class="field">
+      <label>Result Count (displayed)</label>
+      <input type="text" id="inp-results" value="About 1,760,000,000 results (0.43 seconds)" />
+    </div>
+
+    <div class="field full">
+      <label>AI Overview Text <span class="hint">— separate paragraphs with a blank line</span></label>
+      <textarea id="inp-overview">The speed of light in a vacuum is exactly 299,792,458 metres per second (approximately 186,282 miles per second, or about 670,616,629 mph). This value, denoted by the letter c, is a universal physical constant.
+
+Light takes approximately 8 minutes and 20 seconds to travel from the Sun to Earth. In a medium other than a vacuum — such as water or glass — light travels more slowly; the ratio of c to its speed in that medium is called the refractive index.
+
+According to Einstein's special theory of relativity, no information or matter can travel faster than light in a vacuum. The speed of light is a fundamental constant that appears throughout physics, most famously in the equation E = mc².</textarea>
+    </div>
+
+    <div class="field">
+      <label>Source 1 name</label>
+      <input type="text" id="inp-s1" value="Wikipedia" />
+    </div>
+    <div class="field">
+      <label>Source 2 name</label>
+      <input type="text" id="inp-s2" value="NASA" />
+    </div>
+    <div class="field">
+      <label>Source 3 name</label>
+      <input type="text" id="inp-s3" value="britannica.com" />
+    </div>
+
+  </div>
+  <div class="editor-actions">
+    <button id="generateBtn" onclick="generate()">Generate</button>
+    <button id="resetBtn" onclick="reset()">Reset</button>
+    <span class="hint">Changes apply instantly when you click Generate</span>
+  </div>
+</div>
+
+<!-- ── Preview ── -->
+<div id="preview">
+
+  <!-- Header -->
+  <header>
+    <a class="logo" href="#">
+      <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+    </a>
+    <div class="search-bar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="display-query" type="text" value="what is the speed of light" autocomplete="off" readonly />
+      <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+    </div>
+    <nav class="header-nav">
+      <a href="#">Search</a>
+      <a href="#">Images</a>
+      <div class="avatar">A</div>
+    </nav>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <a class="tab active" href="#">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      All
+    </a>
+    <a class="tab" href="#">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Images
+    </a>
+    <a class="tab" href="#">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      Videos
+    </a>
+    <a class="tab" href="#">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M2 20V8a2 2 0 0 1 2-2h12"/></svg>
+      News
+    </a>
+    <a class="tab" href="#">More</a>
+    <a class="tab" href="#">Tools</a>
+  </div>
+
+  <!-- Main -->
+  <main>
+    <p class="result-count" id="display-results">About 1,760,000,000 results (0.43 seconds)</p>
+
+    <div class="ai-overview">
+      <div class="ai-header">
+        <svg class="ai-gem" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gem-grad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#4285F4"/>
+              <stop offset="50%" stop-color="#9B59B6"/>
+              <stop offset="100%" stop-color="#EA4335"/>
+            </linearGradient>
+          </defs>
+          <path d="M14 2C14 2 15.6 9 20 13C15.6 17 14 24 14 24C14 24 12.4 17 8 13C12.4 9 14 2 14 2Z" fill="url(#gem-grad)"/>
+          <path d="M14 7C14 7 14.8 10.5 17 13C14.8 15.5 14 19 14 19C14 19 13.2 15.5 11 13C13.2 10.5 14 7 14 7Z" fill="white" opacity="0.4"/>
+        </svg>
+        <span class="ai-label">AI Overview</span>
+      </div>
+
+      <div class="ai-body" id="display-overview"></div>
+
+      <div class="show-more">
+        Show more
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="ai-sources" id="display-sources"></div>
+
+      <div class="ai-actions">
+        <button class="ai-action-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          Good
+        </button>
+        <button class="ai-action-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+          Bad
+        </button>
+        <button class="ai-action-btn" style="margin-left:auto;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+        <button class="ai-action-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
+      </div>
+
+      <p class="feedback">AI responses can be inaccurate. <a href="#">Learn more</a></p>
+    </div>
+  </main>
+</div>
+
+<script>
+  const COLORS = ['#4285F4','#EA4335','#FBBC05','#34A853','#9B59B6','#1a73e8'];
+
+  function sourceColor(name) {
+    const c = COLORS[name.charCodeAt(0) % COLORS.length];
+    return c;
+  }
+
+  function generate() {
+    const query   = document.getElementById('inp-query').value.trim();
+    const results = document.getElementById('inp-results').value.trim();
+    const overview= document.getElementById('inp-overview').value.trim();
+    const s1      = document.getElementById('inp-s1').value.trim();
+    const s2      = document.getElementById('inp-s2').value.trim();
+    const s3      = document.getElementById('inp-s3').value.trim();
+
+    // Update search bar
+    document.getElementById('display-query').value = query;
+    document.getElementById('display-results').textContent = results;
+
+    // Paragraphs
+    const paras = overview.split(/\n\s*\n/).filter(p => p.trim());
+    document.getElementById('display-overview').innerHTML =
+      paras.map(p => `<p>${p.replace(/\n/g,' ')}</p>`).join('');
+
+    // Sources
+    const sources = [s1, s2, s3].filter(Boolean);
+    document.getElementById('display-sources').innerHTML = sources.map(s => {
+      const letter = s[0].toUpperCase();
+      const color  = sourceColor(s);
+      return `<a class="source-chip" href="#">
+        <div class="source-favicon" style="background:${color};color:#fff;">${letter}</div>
+        ${s}
+      </a>`;
+    }).join('');
+  }
+
+  function reset() {
+    document.getElementById('inp-query').value   = 'what is the speed of light';
+    document.getElementById('inp-results').value = 'About 1,760,000,000 results (0.43 seconds)';
+    document.getElementById('inp-overview').value =
+`The speed of light in a vacuum is exactly 299,792,458 metres per second (approximately 186,282 miles per second, or about 670,616,629 mph). This value, denoted by the letter c, is a universal physical constant.
+
+Light takes approximately 8 minutes and 20 seconds to travel from the Sun to Earth. In a medium other than a vacuum — such as water or glass — light travels more slowly; the ratio of c to its speed in that medium is called the refractive index.
+
+According to Einstein's special theory of relativity, no information or matter can travel faster than light in a vacuum. The speed of light is a fundamental constant that appears throughout physics, most famously in the equation E = mc².`;
+    document.getElementById('inp-s1').value = 'Wikipedia';
+    document.getElementById('inp-s2').value = 'NASA';
+    document.getElementById('inp-s3').value = 'britannica.com';
+    generate();
+  }
+
+  // Run on load
+  generate();
+</script>
+</body>
+</html>

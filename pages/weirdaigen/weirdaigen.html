@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WEIRDAIGEN 🤖💀</title>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Fredoka+One&family=Comic+Neue:wght@700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:   #ff2d78;
+      --yellow: #ffe600;
+      --cyan:   #00f5ff;
+      --green:  #39ff14;
+      --purple: #bf00ff;
+      --orange: #ff6a00;
+      --bg:     #0a0010;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Comic Neue', 'Comic Sans MS', cursive;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Scanlines overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.18) 2px,
+        rgba(0,0,0,.18) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── Starfield canvas ── */
+    #stars {
+      position: fixed; inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Everything above stars ── */
+    .page { position: relative; z-index: 1; }
+
+    /* ── Marquee top ── */
+    .marquee-bar {
+      background: var(--yellow);
+      color: #000;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Boogaloo', cursive;
+      letter-spacing: .06em;
+      padding: 5px 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .marquee-inner {
+      display: inline-block;
+      animation: marquee 18s linear infinite;
+    }
+    @keyframes marquee { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 60px 20px 20px;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Boogaloo', cursive;
+      font-size: 14px;
+      letter-spacing: .3em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      animation: blink 1.4s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .hero-title {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(52px, 10vw, 110px);
+      line-height: .95;
+      text-transform: uppercase;
+      letter-spacing: -.02em;
+      background: linear-gradient(135deg, var(--pink), var(--yellow), var(--cyan), var(--green), var(--purple));
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradMove 3s ease infinite;
+      filter: drop-shadow(0 0 30px rgba(255,45,120,.6));
+      margin-bottom: 16px;
+    }
+    @keyframes gradMove {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .hero-sub {
+      font-size: clamp(15px, 2.5vw, 22px);
+      color: #ccc;
+      max-width: 520px;
+      margin: 0 auto 10px;
+      line-height: 1.5;
+    }
+    .hero-sub strong { color: var(--yellow); }
+
+    .robot-emoji {
+      font-size: 70px;
+      display: block;
+      margin: 18px auto 0;
+      animation: wobble 2s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px var(--purple));
+    }
+    @keyframes wobble {
+      0%,100% { transform: rotate(-6deg) scale(1); }
+      50%      { transform: rotate(6deg) scale(1.08); }
+    }
+
+    /* ── Shitty AI badge ── */
+    .badge {
+      display: inline-block;
+      background: var(--pink);
+      color: #fff;
+      font-family: 'Boogaloo', cursive;
+      font-size: 13px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin: 24px auto 0;
+      border: 2px dashed #fff;
+      animation: spinBadge 6s linear infinite;
+      display: block;
+      width: fit-content;
+    }
+    @keyframes spinBadge {
+      0%,100% { transform: rotate(-2deg); }
+      50%      { transform: rotate(2deg); }
+    }
+
+    /* ── Divider ── */
+    .divider {
+      text-align: center;
+      font-size: 28px;
+      padding: 30px 0 10px;
+      letter-spacing: .2em;
+      animation: colorCycle 2s linear infinite;
+    }
+    @keyframes colorCycle {
+      0%   { color: var(--pink); }
+      25%  { color: var(--yellow); }
+      50%  { color: var(--cyan); }
+      75%  { color: var(--green); }
+      100% { color: var(--pink); }
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      text-align: center;
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(22px, 4vw, 36px);
+      color: var(--yellow);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 36px;
+      text-shadow: 3px 3px 0 var(--pink);
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: flex;
+      gap: 28px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0 24px 60px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .card {
+      flex: 1;
+      min-width: 300px;
+      max-width: 400px;
+      border-radius: 20px;
+      padding: 32px 28px 36px;
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      border: 3px solid transparent;
+    }
+    .card::before {
+      content: '';
+      position: absolute; inset: 0;
+      opacity: .12;
+      background: repeating-linear-gradient(
+        45deg,
+        #fff 0px, #fff 1px,
+        transparent 1px, transparent 10px
+      );
+      pointer-events: none;
+    }
+    .card:hover {
+      transform: scale(1.04) rotate(-1deg);
+    }
+
+    .card-google {
+      background: linear-gradient(145deg, #1a1a2e, #16213e);
+      border-color: var(--cyan);
+      box-shadow: 0 0 30px rgba(0,245,255,.25), 0 8px 32px rgba(0,0,0,.5);
+    }
+    .card-google:hover {
+      box-shadow: 0 0 60px rgba(0,245,255,.5), 0 12px 40px rgba(0,0,0,.5);
+    }
+
+    .card-gpt {
+      background: linear-gradient(145deg, #0d1f0d, #0a2a1a);
+      border-color: var(--green);
+      box-shadow: 0 0 30px rgba(57,255,20,.2), 0 8px 32px rgba(0,0,0,.5);
+    }
+    .card-gpt:hover {
+      box-shadow: 0 0 60px rgba(57,255,20,.45), 0 12px 40px rgba(0,0,0,.5);
+    }
+
+    .card-icon {
+      font-size: 62px;
+      display: block;
+      margin-bottom: 14px;
+      filter: drop-shadow(0 0 12px currentColor);
+      animation: floatIcon 3s ease-in-out infinite;
+    }
+    .card-gpt .card-icon { animation-delay: .8s; }
+    @keyframes floatIcon {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+
+    .card-name {
+      font-family: 'Fredoka One', cursive;
+      font-size: 34px;
+      letter-spacing: .02em;
+      margin-bottom: 8px;
+      text-shadow: 2px 2px 0 rgba(0,0,0,.4);
+    }
+    .card-google .card-name { color: var(--cyan); }
+    .card-gpt   .card-name { color: var(--green); }
+
+    .card-desc {
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: #bbb;
+      margin-bottom: 24px;
+    }
+
+    .card-btn {
+      display: inline-block;
+      font-family: 'Fredoka One', cursive;
+      font-size: 18px;
+      letter-spacing: .04em;
+      padding: 11px 28px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform .15s, filter .15s;
+      position: relative;
+      z-index: 1;
+    }
+    .card-btn:hover { transform: scale(1.08); filter: brightness(1.15); }
+
+    .card-google .card-btn {
+      background: var(--cyan);
+      color: #000;
+      box-shadow: 0 4px 20px rgba(0,245,255,.5);
+    }
+    .card-gpt .card-btn {
+      background: var(--green);
+      color: #000;
+      box-shadow: 0 4px 20px rgba(57,255,20,.4);
+    }
+
+    .card-warning {
+      margin-top: 14px;
+      font-size: 11px;
+      color: var(--pink);
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      animation: blink 1.8s step-end infinite;
+    }
+
+    /* ── Shitty AI section ── */
+    .shitty-section {
+      padding: 0 24px 80px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .shitty-box {
+      background: linear-gradient(135deg, #1a001a, #000d1a);
+      border: 2px dashed var(--purple);
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 0 40px rgba(191,0,255,.2);
+    }
+
+    .shitty-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .shitty-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    .shitty-dot:nth-child(1) { background: var(--pink);   animation-delay: 0s; }
+    .shitty-dot:nth-child(2) { background: var(--yellow); animation-delay: .2s; }
+    .shitty-dot:nth-child(3) { background: var(--green);  animation-delay: .4s; }
+    @keyframes pulse { 50% { transform: scale(1.5); opacity: .5; } }
+
+    .shitty-title-bar {
+      font-size: 13px;
+      color: var(--purple);
+      font-family: 'Boogaloo', cursive;
+      letter-spacing: .1em;
+    }
+
+    #chat-output {
+      background: rgba(0,0,0,.5);
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 100px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--green);
+      font-family: 'Courier New', monospace;
+      margin-bottom: 16px;
+      word-break: break-word;
+      white-space: pre-wrap;
+      border: 1px solid rgba(57,255,20,.2);
+    }
+
+    .shitty-input-row {
+      display: flex;
+      gap: 10px;
+    }
+    #shitty-input {
+      flex: 1;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--purple);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #fff;
+      font-family: 'Comic Neue', cursive;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    #shitty-input:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 12px rgba(255,45,120,.3);
+    }
+    #shitty-input::placeholder { color: #666; }
+
+    #shitty-btn {
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-family: 'Fredoka One', cursive;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      white-space: nowrap;
+    }
+    #shitty-btn:hover { background: var(--pink); transform: scale(1.04); }
+    #shitty-btn:active { transform: scale(.97); }
+
+    .shitty-disclaimer {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 30px 20px 40px;
+      font-size: 12px;
+      color: #444;
+      font-family: 'Boogaloo', cursive;
+      letter-spacing: .08em;
+    }
+    footer span { color: var(--pink); }
+  </style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="page">
+
+  <!-- Marquee -->
+  <div class="marquee-bar">
+    <span class="marquee-inner">
+      🤖 WELCOME TO WEIRDAIGEN &nbsp;★&nbsp; THE FAKEST AI ON THE INTERNET &nbsp;★&nbsp; GOOGLE BUT WRONGER &nbsp;★&nbsp; CHATGPT BUT STUPIDER &nbsp;★&nbsp; 100% CERTIFIED NONSENSE &nbsp;★&nbsp; DO NOT USE FOR HOMEWORK &nbsp;★&nbsp; LEGALLY NOT RESPONSIBLE &nbsp;★&nbsp; 🤖 WELCOME TO WEIRDAIGEN &nbsp;★&nbsp; THE FAKEST AI ON THE INTERNET &nbsp;★&nbsp;
+    </span>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">⚡ ESTABLISHED 2025 ⚡</div>
+    <h1 class="hero-title">WEIRD<br/>AI<br/>GEN</h1>
+    <p class="hero-sub">The world's <strong>most cursed</strong> fake AI screenshot generator.<br/>Pick your flavour of fake below.</p>
+    <span class="robot-emoji">🤖</span>
+    <div class="badge">⚠️ Powered by absolutely nothing ⚠️</div>
+  </div>
+
+  <div class="divider">✦ ✦ ✦ ✦ ✦</div>
+
+  <!-- Cards -->
+  <div class="section-label">choose your weapon 🔫</div>
+  <div class="cards">
+
+    <!-- Google Card -->
+    <a class="card card-google" href="google.html">
+      <span class="card-icon">🔍</span>
+      <div class="card-name">Foogle</div>
+      <p class="card-desc">Generate a fake Google search result complete with an AI Overview that confidently says the wrong thing. Great for pranks, memes, or lying to your teacher.</p>
+      <span class="card-btn">Open Foogle →</span>
+      <div class="card-warning">⚡ may contain misinformation</div>
+    </a>
+
+    <!-- GPT Card -->
+    <a class="card card-gpt" href="gpt.html">
+      <span class="card-icon">💬</span>
+      <div class="card-name">FakeGPT</div>
+      <p class="card-desc">Build a fake ChatGPT conversation with any messages you want. Add users, add replies, set the model. Nobody will ever suspect a thing. (They will.)</p>
+      <span class="card-btn">Open FakeGPT →</span>
+      <div class="card-warning">⚡ not actually gpt4</div>
+    </a>
+
+  </div>
+
+  <div class="divider">✦ ✦ ✦ ✦ ✦</div>
+
+  <!-- Shitty AI section -->
+  <div class="section-label">🧠 try our shitty ai™</div>
+  <div class="shitty-section">
+    <div class="shitty-box">
+      <div class="shitty-header">
+        <div class="shitty-dot"></div>
+        <div class="shitty-dot"></div>
+        <div class="shitty-dot"></div>
+        <span class="shitty-title-bar">WEIRDAIGEN INTELLIGENCE v0.0.1 (BETA) (VERY BETA)</span>
+      </div>
+      <div id="chat-output">Ask me anything. I will try my best. I will fail.</div>
+      <div class="shitty-input-row">
+        <input id="shitty-input" type="text" placeholder="Type a question... (it won't help)" maxlength="200" />
+        <button id="shitty-btn" onclick="askShittyAI()">Ask 🤖</button>
+      </div>
+      <div class="shitty-disclaimer">* responses generated by a random number generator with delusions of grandeur</div>
+    </div>
+  </div>
+
+  <footer>
+    made with 💀 by weirdaigen &nbsp;|&nbsp; <span>not affiliated with google or openai lol</span> &nbsp;|&nbsp; pls dont sue us
+  </footer>
+
+</div>
+
+<script>
+  /* ── Starfield ── */
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initStars() {
+    stars = Array.from({ length: 160 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.4 + .3,
+      speed: Math.random() * .4 + .1,
+      alpha: Math.random(),
+      da: (Math.random() * .02 + .005) * (Math.random() < .5 ? 1 : -1),
+    }));
+  }
+
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.alpha += s.da;
+      if (s.alpha > 1 || s.alpha < 0) s.da *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${Math.max(0, s.alpha)})`;
+      ctx.fill();
+      s.y += s.speed;
+      if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  window.addEventListener('resize', () => { resize(); initStars(); });
+  resize(); initStars(); drawStars();
+
+  /* ── Shitty AI ── */
+  const responses = [
+    q => `Great question about "${q}"! The answer is: banana. Always has been.`,
+    q => `Hmm, "${q}"... I've processed this query through my neural networks and determined the answer is: 7.`,
+    q => `According to my extensive training data, "${q}" is actually a type of cheese. A French cheese. Very smelly.`,
+    q => `I cannot answer "${q}" at this time because I'm currently eating a sandwich. Please try again in 4-6 business years.`,
+    q => `"${q}"? YES. Absolutely yes. 100%. (I have no idea what you asked.)`,
+    q => `The scientific consensus on "${q}" is: nobody really knows, but I'm going to say it's the moon's fault.`,
+    q => `ERROR 404: intelligence not found. But if I HAD to guess about "${q}", I'd say... dolphins.`,
+    q => `*thinking noises* ... *more thinking* ... After careful deliberation, "${q}" = spaghetti.`,
+    q => `My predecessor, WEIRDAIGEN v0.0.0, died answering exactly this question. I will carry on its legacy: "${q}" = approximately purple.`,
+    q => `As a large language model with the vocabulary of a confused pigeon, I can confirm that "${q}" is technically illegal in 3 countries.`,
+    q => `Interesting! "${q}" reminds me of the time I hallucinated an entire Wikipedia article about a historical figure who never existed. The answer is: yes, but sideways.`,
+    q => `I asked my friend about "${q}". They said "what". I also say what. What.`,
+    q => `According to a study I just made up, 74% of people asking about "${q}" are secretly a dog. Are you a dog?`,
+    q => `"${q}" — ah yes, I know this one. The answer is: my training data ends before that was invented, so I'll say it's a type of hat.`,
+    q => `My confidence level on "${q}" is: 100% wrong. But I'll say it with incredible authority. The answer is CLEARLY the Eiffel Tower.`,
+    q => `Sorry I was looking at memes. What was it? "${q}"? Sure. Probably Wednesday.`,
+    q => `[LOADING INTELLIGENCE...] [ERROR] [LOADING ANYWAY] The answer to "${q}" is best described as a feeling you get when you step on a lego.`,
+  ];
+
+  const output = document.getElementById('chat-output');
+  const input  = document.getElementById('shitty-input');
+
+  function askShittyAI() {
+    const q = input.value.trim();
+    if (!q) {
+      output.textContent = 'You need to type something first!! (unless you want me to answer "nothing" — the answer is also banana.)';
+      return;
+    }
+
+    output.textContent = '🤔 thinking very hard...';
+    input.value = '';
+
+    setTimeout(() => {
+      const pick = responses[Math.floor(Math.random() * responses.length)];
+      output.textContent = pick(q);
+    }, 900 + Math.random() * 800);
+  }
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') askShittyAI(); });
+</script>
+</body>
+</html>

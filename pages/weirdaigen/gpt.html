@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChatGPT Conversation Builder</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #212121;
+      --sidebar: #171717;
+      --surface: #2f2f2f;
+      --border: #3f3f3f;
+      --text: #ececec;
+      --text-muted: #8e8ea0;
+      --user-bg: #2f2f2f;
+      --gpt-bg: transparent;
+      --accent: #10a37f;
+      --editor-bg: #f7f7f8;
+      --editor-border: #e5e5e5;
+      --editor-text: #1a1a1a;
+    }
+
+    body {
+      font-family: 'Söhne', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--editor-bg);
+      color: var(--editor-text);
+      min-height: 100vh;
+    }
+
+    /* ══ EDITOR PANEL ══ */
+    #editor {
+      background: #fff;
+      border-bottom: 2px solid var(--editor-border);
+      padding: 20px 28px 24px;
+    }
+
+    #editor h2 {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 18px;
+    }
+
+    .editor-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .editor-row .role-tag {
+      flex-shrink: 0;
+      width: 72px;
+      padding: 7px 0;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: default;
+      user-select: none;
+    }
+    .role-tag.user { background: #e8f4f0; color: #10a37f; }
+    .role-tag.gpt  { background: #f0f0f0; color: #444; }
+
+    .editor-row textarea {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13.5px;
+      font-family: inherit;
+      color: var(--editor-text);
+      resize: vertical;
+      min-height: 60px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      line-height: 1.55;
+    }
+    .editor-row textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16,163,127,.12);
+    }
+
+    .editor-row .del-btn {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #bbb;
+      padding: 8px 4px;
+      font-size: 18px;
+      line-height: 1;
+      transition: color .12s;
+    }
+    .del-btn:hover { color: #e55; }
+
+    .add-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background .12s, border-color .12s;
+    }
+    .add-btn.user-btn { background: #e8f4f0; color: #10a37f; border-color: #c2e4da; }
+    .add-btn.user-btn:hover { background: #d2edea; }
+    .add-btn.gpt-btn  { background: #f0f0f0; color: #444; border-color: #ddd; }
+    .add-btn.gpt-btn:hover  { background: #e4e4e4; }
+
+    .editor-meta {
+      display: flex;
+      gap: 14px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .meta-field { display: flex; flex-direction: column; gap: 4px; }
+    .meta-field label { font-size: 11.5px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .07em; }
+    .meta-field input {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--editor-text);
+      outline: none;
+      width: 200px;
+      transition: border-color .15s;
+    }
+    .meta-field input:focus { border-color: var(--accent); }
+
+    .editor-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    #generateBtn {
+      background: #10a37f;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 9px 22px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    #generateBtn:hover { background: #0d8a6b; }
+
+    #resetBtn {
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 7px;
+      padding: 9px 18px;
+      font-size: 14px;
+      color: #666;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    #resetBtn:hover { background: #f4f4f4; }
+
+    /* ══ PREVIEW ══ */
+    #preview {
+      display: flex;
+      min-height: 600px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 8px;
+      gap: 4px;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      margin-bottom: 4px;
+    }
+    .sidebar-logo svg { width: 28px; height: 28px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13.5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background .12s;
+    }
+    .new-chat-btn:hover { background: rgba(255,255,255,.07); }
+
+    .sidebar-section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 14px 12px 6px;
+    }
+
+    .convo-item {
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background .12s;
+    }
+    .convo-item:hover { background: rgba(255,255,255,.07); }
+    .convo-item.active { background: rgba(255,255,255,.1); }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .user-row:hover { background: rgba(255,255,255,.07); }
+    .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #19c37d;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .user-name { font-size: 13.5px; color: var(--text); font-weight: 500; }
+
+    /* Chat area */
+    .chat-area {
+      flex: 1;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-topbar {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chat-model-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .topbar-actions { display: flex; gap: 6px; }
+    .topbar-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: background .12s, color .12s;
+    }
+    .topbar-btn:hover { background: var(--surface); color: var(--text); }
+
+    /* Messages */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 0 40px;
+    }
+
+    .message-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .message {
+      display: flex;
+      gap: 14px;
+      padding: 16px 0;
+    }
+
+    .msg-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      margin-top: 1px;
+    }
+    .msg-avatar.user-av { background: #19c37d; color: #fff; }
+    .msg-avatar.gpt-av  { background: #fff; color: #000; font-size: 11px; }
+
+    .msg-content { flex: 1; }
+    .msg-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .msg-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .msg-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .message:hover .msg-actions { opacity: 1; }
+    .msg-act-btn {
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      padding: 4px 6px; border-radius: 5px; font-size: 12px;
+      transition: background .12s, color .12s;
+    }
+    .msg-act-btn:hover { background: var(--surface); color: var(--text); }
+
+    /* Input bar */
+    .input-area {
+      padding: 16px 24px 20px;
+      border-top: 1px solid var(--border);
+    }
+    .input-box {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+    .input-box input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .input-box input::placeholder { color: var(--text-muted); }
+    .send-btn {
+      width: 32px; height: 32px;
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .12s;
+    }
+    .send-btn:hover { background: #e5e5e5; }
+    .input-hint {
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      max-width: 760px;
+      margin-left: auto; margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ EDITOR ══ -->
+<div id="editor">
+  <h2>🛠 ChatGPT Conversation Builder</h2>
+
+  <div id="messages-editor"></div>
+
+  <div class="add-btns">
+    <button class="add-btn user-btn" onclick="addMessage('user')">+ User message</button>
+    <button class="add-btn gpt-btn"  onclick="addMessage('gpt')">+ ChatGPT reply</button>
+  </div>
+
+  <div class="editor-meta">
+    <div class="meta-field">
+      <label>Chat title (sidebar)</label>
+      <input type="text" id="inp-title" value="Speed of light question" />
+    </div>
+    <div class="meta-field">
+      <label>Model shown</label>
+      <input type="text" id="inp-model" value="GPT-4o" />
+    </div>
+    <div class="meta-field">
+      <label>Username</label>
+      <input type="text" id="inp-username" value="You" />
+    </div>
+    <div class="editor-actions">
+      <button id="resetBtn" onclick="resetAll()">Reset</button>
+      <button id="generateBtn" onclick="generate()">Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PREVIEW ══ -->
+<div id="preview">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <!-- ChatGPT logo -->
+      <svg viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M37.532 16.87a9.963 9.963 0 0 0-.856-8.184 10.078 10.078 0 0 0-10.855-4.835 9.964 9.964 0 0 0-6.284-3.346 10.079 10.079 0 0 0-10.415 4.967 9.967 9.967 0 0 0-6.664 4.834 10.08 10.08 0 0 0 1.24 11.817 9.965 9.965 0 0 0 .856 8.185 10.079 10.079 0 0 0 10.855 4.835 9.965 9.965 0 0 0 6.284 3.346 10.078 10.078 0 0 0 10.415-4.967 9.967 9.967 0 0 0 6.664-4.834 10.079 10.079 0 0 0-1.24-11.818zm-17.397 24.316a7.46 7.46 0 0 1-4.781-1.73c.061-.033.168-.091.237-.134l7.964-4.6a1.294 1.294 0 0 0 .655-1.134V19.054l3.366 1.944a.12.12 0 0 1 .066.092v9.299a7.505 7.505 0 0 1-7.507 7.797zM4.23 33.202a7.463 7.463 0 0 1-.894-5.023c.06.036.162.099.237.141l7.964 4.6a1.297 1.297 0 0 0 1.308 0l9.724-5.614v3.888a.12.12 0 0 1-.048.103L14.377 36.7a7.505 7.505 0 0 1-10.148-3.498zm-2.37-17.206a7.462 7.462 0 0 1 3.904-3.284c0 .068-.004.19-.004.274v9.201a1.294 1.294 0 0 0 .654 1.132l9.723 5.614-3.366 1.944a.12.12 0 0 1-.114.012L4.304 26.494a7.505 7.505 0 0 1-2.444-10.498zm27.658 6.437l-9.724-5.615 3.367-1.943a.121.121 0 0 1 .114-.012l8.048 4.648a7.498 7.498 0 0 1-1.158 13.528v-9.476a1.293 1.293 0 0 0-.647-1.13zm3.35-5.043c-.059-.037-.162-.099-.236-.141l-7.965-4.6a1.298 1.298 0 0 0-1.308 0l-9.723 5.614v-3.888a.12.12 0 0 1 .048-.103l8.048-4.648a7.498 7.498 0 0 1 11.135 7.766zm-21.063 6.929l-3.367-1.944a.12.12 0 0 1-.065-.092v-9.299a7.497 7.497 0 0 1 12.293-5.756c-.062.032-.168.09-.236.133l-7.965 4.6a1.294 1.294 0 0 0-.654 1.132l-.006 11.226zm1.829-3.943l4.33-2.501 4.332 2.5v4.999l-4.331 2.5-4.331-2.5V20.376z" fill="currentColor" style="color:#fff"/>
+      </svg>
+      <span>ChatGPT</span>
+    </div>
+
+    <button class="new-chat-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New chat
+    </button>
+
+    <div class="sidebar-section-label">Today</div>
+    <div class="convo-item active" id="sidebar-title">Speed of light question</div>
+    <div class="convo-item">Python debugging help</div>
+    <div class="convo-item">Recipe ideas for dinner</div>
+
+    <div class="sidebar-section-label">Yesterday</div>
+    <div class="convo-item">Essay outline feedback</div>
+    <div class="convo-item">Marketing copy draft</div>
+
+    <div class="sidebar-bottom">
+      <div class="user-row">
+        <div class="user-avatar" id="sidebar-avatar">Y</div>
+        <span class="user-name" id="sidebar-username">You</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-area">
+    <div class="chat-topbar">
+      <div class="chat-model-tag">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <span id="display-model">GPT-4o</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" title="Share">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+        <button class="topbar-btn" title="More">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="messages">
+      <div class="message-wrap" id="display-messages"></div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-box">
+        <input type="text" placeholder="Message ChatGPT" readonly />
+        <button class="send-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">ChatGPT can make mistakes. Consider checking important information.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Default messages
+  let msgs = [
+    { role: 'user', text: 'What is the speed of light?' },
+    { role: 'gpt',  text: 'The speed of light in a vacuum is exactly 299,792,458 metres per second (approximately 186,282 miles per second). It\'s denoted by the letter c and is a fundamental constant in physics.\n\nNotably, according to Einstein\'s theory of special relativity, nothing with mass can reach or exceed this speed. It also appears in the famous equation E = mc², linking energy and mass.' },
+    { role: 'user', text: 'How long does it take for light to reach Earth from the Sun?' },
+    { role: 'gpt',  text: 'Light takes approximately 8 minutes and 20 seconds to travel from the Sun to Earth. This is based on the average distance between the two — about 149.6 million kilometres (93 million miles) — divided by the speed of light.\n\nThis delay is why we\'re always seeing the Sun as it was roughly 8 minutes ago, not as it is right now.' },
+  ];
+
+  function renderEditor() {
+    const container = document.getElementById('messages-editor');
+    container.innerHTML = '';
+    msgs.forEach((m, i) => {
+      const row = document.createElement('div');
+      row.className = 'editor-row';
+      row.innerHTML = `
+        <div class="role-tag ${m.role === 'user' ? 'user' : 'gpt'}">${m.role === 'user' ? 'You' : 'ChatGPT'}</div>
+        <textarea oninput="msgs[${i}].text=this.value">${m.text}</textarea>
+        <button class="del-btn" onclick="deleteMsg(${i})" title="Remove">×</button>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function addMessage(role) {
+    msgs.push({ role, text: '' });
+    renderEditor();
+    // Focus the new textarea
+    const rows = document.querySelectorAll('.editor-row textarea');
+    rows[rows.length - 1].focus();
+  }
+
+  function deleteMsg(i) {
+    msgs.splice(i, 1);
+    renderEditor();
+  }
+
+  function generate() {
+    const title    = document.getElementById('inp-title').value.trim() || 'New chat';
+    const model    = document.getElementById('inp-model').value.trim() || 'GPT-4o';
+    const username = document.getElementById('inp-username').value.trim() || 'You';
+
+    // Sidebar
+    document.getElementById('sidebar-title').textContent = title;
+    document.getElementById('display-model').textContent = model;
+    document.getElementById('sidebar-username').textContent = username;
+    document.getElementById('sidebar-avatar').textContent = username[0].toUpperCase();
+
+    // Sync textarea values into msgs array
+    const textareas = document.querySelectorAll('.editor-row textarea');
+    textareas.forEach((ta, i) => { if (msgs[i]) msgs[i].text = ta.value; });
+
+    // Render messages
+    const container = document.getElementById('display-messages');
+    container.innerHTML = msgs.map(m => {
+      const isUser = m.role === 'user';
+      const name = isUser ? username : 'ChatGPT';
+      const initials = isUser ? username[0].toUpperCase() : '✦';
+      const avatarClass = isUser ? 'user-av' : 'gpt-av';
+      const escaped = m.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `
+        <div class="message">
+          <div class="msg-avatar ${avatarClass}">${initials}</div>
+          <div class="msg-content">
+            <div class="msg-name">${name}</div>
+            <div class="msg-text">${escaped}</div>
+            <div class="msg-actions">
+              <button class="msg-act-btn" title="Copy">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              ${!isUser ? `<button class="msg-act-btn" title="Thumbs up">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+              </button>
+              <button class="msg-act-btn" title="Thumbs down">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+              </button>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function resetAll() {
+    msgs = [
+      { role: 'user', text: 'What is the speed of light?' },
+      { role: 'gpt',  text: 'The speed of light in a vacuum is exactly 299,792,458 metres per second (approximately 186,282 miles per second). It\'s denoted by the letter c and is a fundamental constant in physics.\n\nNotably, according to Einstein\'s theory of special relativity, nothing with mass can reach or exceed this speed. It also appears in the famous equation E = mc², linking energy and mass.' },
+      { role: 'user', text: 'How long does it take for light to reach Earth from the Sun?' },
+      { role: 'gpt',  text: 'Light takes approximately 8 minutes and 20 seconds to travel from the Sun to Earth. This is based on the average distance between the two — about 149.6 million kilometres (93 million miles) — divided by the speed of light.\n\nThis delay is why we\'re always seeing the Sun as it was roughly 8 minutes ago, not as it is right now.' },
+    ];
+    document.getElementById('inp-title').value = 'Speed of light question';
+    document.getElementById('inp-model').value = 'GPT-4o';
+    document.getElementById('inp-username').value = 'You';
+    renderEditor();
+    generate();
+  }
+
+  // Init
+  renderEditor();
+  generate();
+</script>
+</body>
+</html>
